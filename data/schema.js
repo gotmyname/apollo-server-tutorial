@@ -15,10 +15,9 @@ type Post {
   author: Author
 }
 
-# the schema allows the following two queries:
+# the schema allows the following queries:
 type RootQuery {
   author(firstName: String, lastName: String): Author
-  fortuneCookie: String
 }
 
 # this schema allows the following two mutations:

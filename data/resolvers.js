@@ -1,4 +1,4 @@
-import { Author, Post, View, FortuneCookie } from './connectors';
+import { Author, Post } from './connectors';
 
 const resolveFunctions = {
   RootQuery: {
@@ -11,9 +11,6 @@ const resolveFunctions = {
         where = { lastName };
       }
       return Author.find({ where });
-    },
-    fortuneCookie(){
-      return FortuneCookie.getOne();
     },
   },
   RootMutation: {
@@ -38,10 +35,7 @@ const resolveFunctions = {
       return post.tags.split(',');
     },
     views(post){
-      return new Promise((resolve, reject) => {
-        setTimeout( () => reject('MongoDB timeout when fetching field views (timeout is 500ms)'), 500);
-        View.findOne({ postId: post.id }).then( (res) => resolve(res.views) );
-      })
+      return post.views;
     }
   }
 }

@@ -1,12 +1,16 @@
 import Sequelize from 'sequelize';
-import Mongoose from 'mongoose';
 import casual from 'casual';
-import rp from 'request-promise';
 import _ from 'lodash';
 
-const db = new Sequelize('blog', null, null, {
-  dialect: 'sqlite',
-  storage: './blog.sqlite'
+const db = new Sequelize('blog', 'dbu', 'hello123', {
+  dialect: 'postgres',
+  host: 'localhost',
+  port: 5432,
+  pool: {
+    max: 5,
+    min: 0,
+    idle: 10000
+  },
 });
 
 const AuthorModel = db.define('author', {
@@ -27,26 +31,18 @@ const PostModel = db.define('post', {
   },
   tags: {
     type: Sequelize.STRING,
+  },
+  views: {
+    type: Sequelize.INTEGER,
   }
 });
 
 
-const mongo = Mongoose.connect('mongodb://localhost/views', (err) => {
-  if(err){
-    console.error('Could not connect to MongoDB on port 27017');
-  }
-});
-
-const ViewSchema = Mongoose.Schema({
-  postId: Number,
-  views: Number,
-})
-
-const View = Mongoose.model('views', ViewSchema);
 // Relations
 AuthorModel.hasMany(PostModel);
 PostModel.belongsTo(AuthorModel);
 
+// Create some example data in db
 casual.seed(123);
 db.sync({ force: true }).then(()=> {
   _.times(10, ()=> {
@@ -58,10 +54,7 @@ db.sync({ force: true }).then(()=> {
         title: `A post by ${author.firstName} ${author.lastName}`,
         text: casual.sentences(3),
         tags: casual.words(3).split(' ').join(','),
-      }).then( (post) => {
-        return View.update({ postId: post.id }, { views: casual.integer(0,100)}, { upsert: true })
-        .then( (res) => console.log(res))
-        .catch( (err) => console.log(err));
+        views: casual.integer(0, 100),
       });
     });
   });
@@ -70,14 +63,4 @@ db.sync({ force: true }).then(()=> {
 const Author = db.models.author;
 const Post = db.models.post;
 
-const FortuneCookie = {
-  getOne(){
-    return rp('http://fortunecookieapi.com/v1/cookie')
-      .then((res) => JSON.parse(res))
-      .then((res) => {
-        return res[0].fortune.message;
-      });
-  },
-};
-
-export { Author, Post, View, FortuneCookie };
+export { Author, Post };
